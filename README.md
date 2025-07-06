@@ -15,7 +15,29 @@
 
 ## Overview
 
-The Simple Price Oracle AVS Example demonstrates how to deploy a minimal AVS using Othentic Stack.
+The Confidential AVS Example demonstrates how to create and deploy a minimal Confidential AVS.
+
+The concept of Confidential AVS is that the user data remains confidential and is protected from both the Performer nodes and the Attester nodes.
+
+Confidential AVS uses TEE-based SecretVM technology developed by Secret.
+
+In Confidential AVS, Performer nodes runs inside a TEE-powered Confidential Virtual Machine (CVM), offering two key properties:
+- Data Confidentiality: CVM's memory is encrytpted and cannot be accessed by the operator of the node
+- Verifiability of the source code: CVM attestation allows to cryptographically prove the authenticity of the software running inside the CVM
+
+The Perfomrmer receives a Tesk from a user and executes it (user data remains confidential), and then submits the tasks along with an attestation-tied signature to the Attesters.
+
+Attesters validate the following:
+- That the attestation belongs to a known Performer software package and version, proving that the code is genuine and has not been tampered with. 
+- That the task message is actually signed by the code running in this software package
+
+  ### Useful Links
+
+- [Intro to SecretVM](https://docs.scrt.network/secret-network-documentation/secretvm-confidential-virtual-machines/introduction)
+- [SecretVM Attestation Docs](https://docs.scrt.network/secret-network-documentation/secretvm-confidential-virtual-machines/attestation)
+- [Verifiable Message Signing Docs](https://docs.scrt.network/secret-network-documentation/secretvm-confidential-virtual-machines/verifiable-message-signing)
+- [SecretVM Source Code](https://github.com/scrtlabs/secretvm)
+
 
 
 ## Project Structure
@@ -104,7 +126,7 @@ Validation Service logic:
 4. Follow the steps in the official documentation's [Quickstart](https://docs.othentic.xyz/main/welcome/getting-started/install-othentic-cli) Guide for setup and deployment.
 
    ```
-   cd simple-price-oracle-avs-example
+   cd confidential-avs-example
    docker compose build --no-cache
    docker compose up
    curl -X POST http://localhost:4003/task/execute
