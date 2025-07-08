@@ -21,42 +21,55 @@ The Simple Price Oracle AVS Example demonstrates how to deploy a minimal AVS usi
 ## Project Structure
 
 ```mdx
-📂 simple-price-oracle-avs-example
-├── 📂 Execution_Service         # Implements Task execution logic - Express JS Backend
-│   ├── 📂 config/
-│   │   └── app.config.js        # An Express.js app setup with dotenv, and a task controller route for handling `/task` endpoints.
-│   ├── 📂 src/
-│   │   └── dal.service.js       # A module that interacts with Pinata for IPFS uploads
-│   │   ├── oracle.service.js    # A utility module to fetch the current price of a cryptocurrency pair from the Binance API
-│   │   ├── task.controller.js   # An Express.js router handling a `/execute` POST endpoint
-│   │   ├── 📂 utils             # Defines two custom classes, CustomResponse and CustomError, for standardizing API responses
-│   ├── Dockerfile               # A Dockerfile that sets up a Node.js (22.6) environment, exposes port 8080, and runs the application via index.js
-|   ├── index.js                 # A Node.js server entry point that initializes the DAL service, loads the app configuration, and starts the server on the specified port
-│   └── package.json             # Node.js dependencies and scripts
-│
-├── 📂 Validation_Service         # Implements task validation logic - Express JS Backend
-│   ├── 📂 config/
-│   │   └── app.config.js         # An Express.js app setup with a task controller route for handling `/task` endpoints.
-│   ├── 📂 src/
-│   │   └── dal.service.js        # A module that interacts with Pinata for IPFS uploads
-│   │   ├── oracle.service.js     # A utility module to fetch the current price of a cryptocurrency pair from the Binance API
-│   │   ├── task.controller.js    # An Express.js router handling a `/validate` POST endpoint
-│   │   ├── validator.service.js  # A validation module that checks if a task result from IPFS matches the ETH/USDT price within a 5% margin.
-│   │   ├── 📂 utils              # Defines two custom classes, CustomResponse and CustomError, for standardizing API responses.
-│   ├── Dockerfile                # A Dockerfile that sets up a Node.js (22.6) environment, exposes port 8080, and runs the application via index.js.
-|   ├── index.js                  # A Node.js server entry point that initializes the DAL service, loads the app configuration, and starts the server on the specified port.
-│   └── package.json              # Node.js dependencies and scripts
-│
-├── 📂 grafana                    # Grafana monitoring configuration
-├── docker-compose.yml            # Docker setup for Operator Nodes (Performer, Attesters, Aggregator), Execution Service, Validation Service, and monitoring tools
-├── .env.example                  # An example .env file containing configuration details and contract addresses
-├── README.md                     # Project documentation
-└── prometheus.yaml               # Prometheus configuration for logs
+└── 📂 confidential-avs-example/          # Root directory for the Confidential AVS Example project
+├── 📂 Execution_Service/                 # Service responsible for executing confidential tasks
+│   ├── 📂 configs/                       # Configuration files for the Execution Service
+│   │   └── 📄 app.config.js              # Main configuration file for the Execution Service
+│   ├── 📂 src/                           # Source code for the Execution Service
+│   │   ├── 📂 utils/                     # Utility modules for the Execution Service
+│   │   │   ├── 📄 mcl.js                 # MCL cryptography utilities
+│   │   │   ├── 📄 validateError.js       # Error validation utilities
+│   │   │   └── 📄 validateResponse.js    # Response validation utilities
+│   │   ├── 📄 dal.service.js             # Data access layer for Execution Service
+│   │   ├── 📄 kyc.service.js             # KYC (Know Your Customer) service logic
+│   │   └── 📄 task.controller.js         # Controller for handling task-related endpoints
+│   ├── 📄 Dockerfile                     # Dockerfile for containerizing the Execution Service
+│   ├── 📄 index.js                       # Entry point for the Execution Service
+│   ├── 📄 package-lock.json              # NPM lock file for dependency management
+│   ├── 📄 package.json                   # NPM package manifest for Execution Service
+│   └── 📄 yarn.lock                      # Yarn lock file for dependency management
+├── 📂 Validation_Service/                # Service responsible for validating confidential tasks
+│   ├── 📂 configs/                       # Configuration files for the Validation Service
+│   │   └── 📄 app.config.js              # Main configuration file for the Validation Service
+│   ├── 📂 src/                           # Source code for the Validation Service
+│   │   ├── 📂 utils/                     # Utility modules for the Validation Service
+│   │   │   ├── 📄 validateError.js       # Error validation utilities
+│   │   │   └── 📄 validateResponse.js    # Response validation utilities
+│   │   ├── 📄 dal.service.js             # Data access layer for Validation Service
+│   │   ├── 📄 oracle.service.js          # Oracle integration logic
+│   │   ├── 📄 task.controller.js         # Controller for handling task-related endpoints
+│   │   ├── 📄 validator.service.js       # Core validation logic
+│   │   └── 📄 verify.service.js          # Service for verification processes
+│   ├── 📄 Dockerfile                     # Dockerfile for containerizing the Validation Service
+│   ├── 📄 index.js                       # Entry point for the Validation Service
+│   ├── 📄 package.json                   # NPM package manifest for Validation Service
+├── 📂 grafana/                           # Grafana monitoring and visualization setup
+   │   ├── 📂 dashboards/                 # Predefined Grafana dashboards
+│   │   └── 📄 othentic-cli.json          # Grafana dashboard configuration for Othentic CLI
+│   └── 📂 provisioning/                  # Grafana provisioning configuration
+│   ├── 📂 dashboards/                    # Dashboard provisioning configs
+│   │   └── 📄 dashboards.yaml            # Dashboard provisioning YAML
+│   └── 📂 datasources/                   # Datasource provisioning configs
+│   └── 📄 datasources.yaml               # Datasource provisioning YAML
+├── 📄 Dockerfile                         # Root Dockerfile, possibly for building base images or multi-service setups
+├── 📄 README.md                          # Project documentation and instructions
+├── 📄 docker-compose.yml                 # Docker Compose file for orchestrating multi-container services
+└── 📄 prometheus.yaml # Prometheus monitoring configuration file
 ```
 
 ## Architecture
 
-![Price oracle sample](https://github.com/user-attachments/assets/03d544eb-d9c3-44a7-9712-531220c94f7e)
+The Performer Node runs inside a TEE.
 
 The Performer node executes tasks using the Task Execution Service and sends the results to the p2p network.
 
