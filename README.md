@@ -17,70 +17,41 @@
 
 The Simple Price Oracle AVS Example demonstrates how to deploy a minimal AVS using Othentic Stack.
 
-
-## Project Structure
-
-```mdx
-└── 📂 confidential-avs-example/          # Root directory for the Confidential AVS Example project
-├── 📂 Execution_Service/                 # Service responsible for executing confidential tasks
-│   ├── 📂 configs/                       # Configuration files for the Execution Service
-│   │   └── 📄 app.config.js              # Main configuration file for the Execution Service
-│   ├── 📂 src/                           # Source code for the Execution Service
-│   │   ├── 📂 utils/                     # Utility modules for the Execution Service
-│   │   │   ├── 📄 mcl.js                 # MCL cryptography utilities
-│   │   │   ├── 📄 validateError.js       # Error validation utilities
-│   │   │   └── 📄 validateResponse.js    # Response validation utilities
-│   │   ├── 📄 dal.service.js             # Data access layer for Execution Service
-│   │   ├── 📄 kyc.service.js             # KYC (Know Your Customer) service logic
-│   │   └── 📄 task.controller.js         # Controller for handling task-related endpoints
-│   ├── 📄 Dockerfile                     # Dockerfile for containerizing the Execution Service
-│   ├── 📄 index.js                       # Entry point for the Execution Service
-│   ├── 📄 package-lock.json              # NPM lock file for dependency management
-│   ├── 📄 package.json                   # NPM package manifest for Execution Service
-│   └── 📄 yarn.lock                      # Yarn lock file for dependency management
-├── 📂 Validation_Service/                # Service responsible for validating confidential tasks
-│   ├── 📂 configs/                       # Configuration files for the Validation Service
-│   │   └── 📄 app.config.js              # Main configuration file for the Validation Service
-│   ├── 📂 src/                           # Source code for the Validation Service
-│   │   ├── 📂 utils/                     # Utility modules for the Validation Service
-│   │   │   ├── 📄 validateError.js       # Error validation utilities
-│   │   │   └── 📄 validateResponse.js    # Response validation utilities
-│   │   ├── 📄 dal.service.js             # Data access layer for Validation Service
-│   │   ├── 📄 oracle.service.js          # Oracle integration logic
-│   │   ├── 📄 task.controller.js         # Controller for handling task-related endpoints
-│   │   ├── 📄 validator.service.js       # Core validation logic
-│   │   └── 📄 verify.service.js          # Service for verification processes
-│   ├── 📄 Dockerfile                     # Dockerfile for containerizing the Validation Service
-│   ├── 📄 index.js                       # Entry point for the Validation Service
-│   ├── 📄 package.json                   # NPM package manifest for Validation Service
-├── 📂 grafana/                           # Grafana monitoring and visualization setup
-   │   ├── 📂 dashboards/                 # Predefined Grafana dashboards
-│   │   └── 📄 othentic-cli.json          # Grafana dashboard configuration for Othentic CLI
-│   └── 📂 provisioning/                  # Grafana provisioning configuration
-│   ├── 📂 dashboards/                    # Dashboard provisioning configs
-│   │   └── 📄 dashboards.yaml            # Dashboard provisioning YAML
-│   └── 📂 datasources/                   # Datasource provisioning configs
-│   └── 📄 datasources.yaml               # Datasource provisioning YAML
-├── 📄 Dockerfile                         # Root Dockerfile, possibly for building base images or multi-service setups
-├── 📄 README.md                          # Project documentation and instructions
-├── 📄 docker-compose.yml                 # Docker Compose file for orchestrating multi-container services
-└── 📄 prometheus.yaml # Prometheus monitoring configuration file
-```
-
 ## Architecture
 
-The Performer Node runs inside a TEE.
+The Performer Node runs inside a SecretVM TEE, offering two crucial properties:
+1. The user data is protected from the Node Operator
+2. The source code running on the Performer Node is verifiable through Attestation
 
 The Performer node executes tasks using the Task Execution Service and sends the results to the p2p network.
 
 Attester Nodes validate task execution through the Validation Service. Based on the Validation Service's response, attesters sign the tasks. In this AVS:
 
-Task Execution logic:
+### Task Execution logic:
+The Performer Node receievs a picture of the user's identification document. The Performer Node uses a Confidential AI model provide by SecretAI to extract key fields from the ID:
+- Country of citizenship
+- Age
+The Performer Node constructs the task results with three fields:
+  Country of Origin: String
+  Is Over 18: Boolean
+  Is Over 21: Boolean
 
+The task results are _signed_ using [Verifiable Message Signature](https://docs.scrt.network/secret-network-documentation/secretvm-confidential-virtual-machines/verifiable-message-signing) scheme that ties the message to a specific TEE attestation and guarantees that the results were produced on a Performer Node running a known and approved version of the code.
 
-Validation Service logic:
+Note: the actual image of the user ID is not stored neither in the Performed Node nor in the SecretAI LLM server (this can be validated by auditing the source code)
+
+### Validation Service logic:
+The Attester Nodes performs the following logic:
+a. Extract the Public Key from the Attestation Quote's user data field
+b. Decode the message and verify the message signature
+c. Confirm that the Attestation Quote was produced by the expected source code by comparing the MRTD, RTMR0, RTMR1, RTMR2 and RTMR3 to known good values. This guarantees that the Performer Node code was not tampered with
+
+After these steps are completed, the Attester is sure that the message is produced by an untampered Performer Node and thus can be fully trusted.
+
+Note: the Attester nodes also don't get access to the actual data of the user, ensuring complete privacy of the solution
 
 ---
+
 
 ## Prerequisites
 
@@ -94,9 +65,8 @@ Validation Service logic:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/Othentic-Labs/simple-price-oracle-avs-example.git
-   cd simple-price-oracle-avs-example
-   git checkout kyc-avs
+   git clone https://github.com/Othentic-Labs/confidential-avs-example.git
+   cd confidential-avs-example
    ```
 
 2. Install Othentic CLI:
